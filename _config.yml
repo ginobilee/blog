@@ -79,6 +79,6 @@ theme: landscape
 ## Docs: https://hexo.io/docs/deployment.html
 deploy:
   type: git
-  repo: <repository url> #https://bitbucket.org/JohnSmith/johnsmith.bitbucket.io
-  branch: [branch] #published
-  message: [message]
+  repo: git@github.com:ginobilee/blog.git #https://bitbucket.org/JohnSmith/johnsmith.bitbucket.io
+  branch: gh-pages #published
+  message: 
