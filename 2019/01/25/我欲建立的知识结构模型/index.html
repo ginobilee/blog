@@ -1,0 +1,38 @@
+<!DOCTYPE html><html lang="ch"><head><meta name="generator" content="Hexo 3.8.0"><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><title> 我欲建立的知识结构模型 · mg20</title><meta name="description" content="我欲建立的知识结构模型 - mg20"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" href="/blog/favicon.png"><link rel="stylesheet" href="/blog/css/apollo.css"><link rel="search" type="application/opensearchdescription+xml" href="https://ginobilee.github.io/atom.xml" title="mg20"></head><body><div class="wrap"><header><a href="/blog/" class="logo-link"><img src="/blog/favicon.png" alt="logo"></a><ul class="nav nav-list"><li class="nav-list-item"><a href="/blog/" target="_self" class="nav-list-link">BLOG</a></li><li class="nav-list-item"><a href="/blog/archives/" target="_self" class="nav-list-link">ARCHIVE</a></li><li class="nav-list-item"><a href="https://github.com/ginobilee" target="_blank" class="nav-list-link">GITHUB</a></li><li class="nav-list-item"><a href="/blog/atom.xml" target="_self" class="nav-list-link">RSS</a></li></ul></header><main class="container"><div class="post"><article class="post-block"><h1 class="post-title">我欲建立的知识结构模型</h1><div class="post-info">Jan 25, 2019</div><div class="post-content"><h2 id="起源及程序员的一般知识结构"><a href="#起源及程序员的一般知识结构" class="headerlink" title="起源及程序员的一般知识结构"></a>起源及程序员的一般知识结构</h2><p>在跟踪winter的《重学前端》系列时的所想。  </p>
+<p>winter提到，要建立自己的知识架构。这刚好是我最近在思考的问题。  </p>
+<p>一个前端，首先是一个程序员。程序员的基本知识架构，前端也是应该具备的，比如数据结构、算法、编译原理、操作系统等等。但这些更是一个人的能力素质基础，虽然决定了一个人在技术上能够达到的高度，却不一定能在工作中立即解决面对的问题。这些素质我想可以认为是一个前端(以及程序员)在”道”这个层次的要求。而前端作为一个工程实践性远高于理论探索性的职业，从业者和招聘者也自然会忽视这方面的要求，而对具体的职业技能更为看重。  </p>
+<p>大佬也提到这门课不会关注前面说的计算机基础，而是重点关注前端领域内的技能。我认为，在前端领域内，也可以划分为基础素质或曰能力，以及实践技能。基础素质按照大佬的这个划分已经是极好的了。javascript/html/css可以认为是前端从业者的工具，浏览器/node.js这些是前端工作的宿主，工程化是前端从业者利用工具在宿主上实现特定工程目标这一个过程的经验总结。这些可以认为是一个前端在”法”这个层次的要求。  </p>
+<p>按照道、法、术的层次，现在社区中充斥的，”xx天带你撸一个xx”之类的文章或视频，基本上都是”术”这个层次。法与术，不同的人会有不同的见解。对于a来说认为是法的东西，可能对于b来说只是术，对于c来说已经是道了。我想这也能反映出一个人的认知水平。  </p>
+<h2 id="javascript的知识结构"><a href="#javascript的知识结构" class="headerlink" title="javascript的知识结构"></a>javascript的知识结构</h2><p>具体到javascript这一块，我之前的认知将其从结构上分为这么两块: 语法+运行时。我所划分的语法就是指es规范，其实是大佬所讲的一整个javascript这块。而运行时是规范中implementation的概念，是浏览器(html标准)/node.js中对于规范的实现，以及这些特定实现中交织的其它(非es规范)部分。举例来说，大家经常提到的eventloop，其实是html或node.js中的机制，两者分别有对应的规范/实现。而在es规范中，其实只是在es6加入模块化和Promise之后才有相关的概念Job。而对于html规范中的eventloop，js的运行(脚本执行/多个JobQueue的执行)只是其中一部分，此外还有对于渲染的处理(resize/paint/requestAnimationFrame等等)。我觉得将这些概念区分清楚是大有裨益于自己知识结构的建立的，它们就像知识之间的边界，对于不同的知识有清晰的边界，才会有更清晰的认知。  </p>
+<p>大佬将javascript的知识结构划分为 文法/语义/运行时 是一种更精准的划分。  </p>
+<h2 id="我对于前端知识结构的认识"><a href="#我对于前端知识结构的认识" class="headerlink" title="我对于前端知识结构的认识"></a>我对于前端知识结构的认识</h2><p>我所认为的前端知识架构，其实从一个简单的问题就可以包括进来:一个页面从输入地址到可交互，有哪些过程？  </p>
+<p>这个问题可以不停地深入下去，找到所有的细节；同时所有问题又都可以在这个问题上找到它的位置。比如从问题本身出发，牵涉到的问题就有:  </p>
+<ol>
+<li>网络。域名怎么转换为服务器地址?这里会不会有安全性问题？域名解析服务会不会挂掉(我们遇到过)?</li>
+<li>http协议。一个请求的结构？缓存规则？service worker？动静分离？不同的状态码什么含义？跨域？动词方法？restful接口？预检请求？性能优化中相关措施？https？</li>
+<li>浏览器的渲染过程。这是一个大的话题，里面信息量巨大。如何解析html？文档模型与渲染树？脚本的加载？如何优化脚本的加载？多个脚本加载有没有优化方法？为什么要以某种模式优化(比如script放在body后)？为什么处理js要阻塞渲染，浏览器为何如此设计，为何不像客户端一样分成两个线程？加载脚本的网络请求是同一个线程么？那多个脚本的加载是同一个线程么？脚本加载完后如何与渲染线程交互？把脚本放在html加载与放在另一个脚本里加载有区别么？js的模块化？要不要将多个请求分成多个域名，为什么？浏览器的事件循环模型？不同浏览器的兼容性？如何抹平差异？</li>
+<li>页面的交互一般是通过js实现的，那么js的领域都可以牵涉进来了。<ol>
+<li>js的语法和运行时</li>
+<li>js可以访问到的宿主接口(这其实也是很大的一个范畴，比如setTimeout/setInterval都是其中的。而只是xhr/fetch就可以牵出许多问题。比如异步网络请求是在单独的线程执行的么？那么请求结果如何通知主线程？fetch请求会返回一个promise，那么它是放在Mircotask Queue的么？)</li>
+<li>不同宿主对于js的实现？</li>
+<li>es规范中的新语法？如何应用在没有提供实现的宿主中？<br>…</li>
+</ol>
+</li>
+<li>内容结构和样式的组织: html与css。</li>
+<li>站点结构。如何部署？如何最小更新？这里又牵涉到了工程化问题的一部分。<br>…</li>
+</ol>
+<p>回过头来，再将知识规划成上面这一个体系的话，可以将所有东西都划进对应的slot内。  </p>
+<p>比如模块化，他应该是属于什么问题？它从一个工程问题而来(es规范最初没有模块化，只有社区的实践，require这样的语法在规范中是没有的)，演变成一个es规范的问题。而且我们可以看到，对于这个问题，es规范的解决是优于社区的解决方案的。规范的解决思路，是从语言的层面上去提供能力，社区的解决思路还是停留在解决问题。当然，规范的解决思路从社区中汲取了营养，这是毫无疑问的。   </p>
+<p>总之，我想建立的知识体系，是对应这样一个流程的: 用这一个问题可以把所有这些概念包容进去；对于任何问题，又都可以在这个问题中找到它的坑位。   </p>
+<h2 id="我想建立的知识结构"><a href="#我想建立的知识结构" class="headerlink" title="我想建立的知识结构"></a>我想建立的知识结构</h2><p>我想建立的是:  </p>
+<ol>
+<li>首先明白es规范对于问题是怎么阐述的。这里就包括 语法/算法。</li>
+<li>各个宿主中是如何实现的。比如Promise，浏览器的实现？浏览器又是如何利用这些装置提供api的，比如fetch？</li>
+<li>从第1个问题引申出的是js运行时的一个概览，明白从模块/函数到语句的运行过程；从第2个问题引申出的是浏览器或其它宿主是如何实现的？它们的内部架构？</li>
+<li>明白了这两块，就基本明了了前端的基础。再辅以网络/更外层的宿主(浏览器可以认为是js宿主，操作系统可以认为是浏览器宿主，服务器可以认为是操作系统宿主)的原理，这个就是不断扩展边界的过程了。</li>
+</ol>
+<p>ref:    </p>
+<ol>
+<li><a href="https://time.geekbang.org/column/article/77749" target="_blank" rel="noopener">winter的分享之明确你的前端学习路线与方法</a></li>
+</ol>
+</div></article></div></main><footer><div class="paginator"><a href="/blog/2019/01/24/myPromise/" class="next">NEXT</a></div><div class="copyright"><p>© 2019 <a href="https://ginobilee.github.io">mg20</a>, powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/pinggod/hexo-theme-apollo" target="_blank">hexo-theme-apollo</a>.</p></div></footer></div><script async src="//cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML" integrity="sha384-crwIf/BuaWM9rM65iM+dWFldgQ1Un8jWZMuh3puxb8TOY9+linwLoI7ZHZT+aekW" crossorigin="anonymous"></script></body></html>
