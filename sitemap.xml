@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>https://ginobilee.github.io/2019/01/28/webpack%E4%B8%AD%E5%BC%82%E6%AD%A5%E5%8A%A0%E8%BD%BD%E7%9A%84%E9%80%BB%E8%BE%91/</loc>
+    
+    <lastmod>2019-01-28T03:23:36.000Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>https://ginobilee.github.io/2019/01/28/xhr%20vs%20fetch/</loc>
     
     <lastmod>2019-01-28T01:12:42.000Z</lastmod>
