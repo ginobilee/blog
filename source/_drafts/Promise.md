@@ -125,6 +125,43 @@ todo: promise.defer ???
 
 > It doesn't make much practical sense to have a race with immediate values, because the first one listed will obviously win -- like a foot race where one runner starts at the finish line!
 
+接受的数组参数中的元素，每一个是一个promise、thenable或者立即值  
+数组中所有的promise都fullfill了，这个promise才会fullfill，它的value是每个promise的value数组  
+有任意一个promise发生了reject，这个promise也会reject。传入的参数也是对应promise的值
+
+
+
+## Promise API Recap
+### new Promise(..) Constructor
+<blockquote>
+reject(..) simply rejects the promise, but resolve(..) can either fulfill the promise or reject it, depending on what it's passed. If resolve(..) is passed an immediate, non-Promise, non-thenable value, then the promise is fulfilled with that value.
+
+But if resolve(..) is passed a genuine Promise or thenable value, that value is unwrapped recursively, and whatever its final resolution/state is will be adopted by the promise.
+</blockquote>
+
+### then(..) and catch(..)
+<blockquote>
+Each Promise instance (not the Promise API namespace) has then(..) and catch(..) methods, which allow registering of fulfillment and rejection handlers for the Promise. 
+then(..) takes one or two parameters, the first for the fulfillment callback, and the second for the rejection callback. If either is omitted or is otherwise passed as a non-function value, a default callback is substituted respectively. The default fulfillment callback simply passes the message along, while the default rejection callback simply rethrows (propagates) the error reason it receives.
+(如果在then中没有指定fullfill或reject的handler，会有一个默认的handler，它只是将值继续传递或继续抛出错误)
+
+catch(..) takes only the rejection callback as a parameter, and automatically substitutes the default fulfillment callback, as just discussed. In other words, it's equivalent to then(null,..):
+(catch相当于有一个默认fullfill处理器的then，理解这一点很重要。因为catch总会返回一个新的promise，对于实现Promise里说很重要)
+
+</blockquote>
+<hr />
+### limatations of es6 Promise
+> catch(..) takes only the rejection callback as a parameter, and automatically substitutes the default fulfillment callback, as just discussed. In other words, it's equivalent to then(null,..):
+promise 链中间的错误如果被处理了，无法得知。
+
+> Promises by definition only have a single fulfillment value or a single rejection reason. In simple examples, this isn't that big of a deal, but in more sophisticated scenarios, you may find this limiting.
+(只能传一个值)
+
+### Promise Uncancelable
+> Note: Many Promise abstraction libraries provide facilities to cancel Promises, but this is a terrible idea! Many developers wish Promises had natively been designed with external cancelation capability, but the problem is that it would let one consumer/observer of a Promise affect some other consumer's ability to observe that same Promise. This violates the future-value's trustability (external immutability), but moreover is the embodiment of the "action at a distance" anti-pattern (http://en.wikipedia.org/wiki/Action_at_a_distance_%28computer_programming%29). Regardless of how useful it seems, it will actually lead you straight back into the same nightmares as callbacks.
+
+<hr />
+
 ### Promise 的构造器参数 resolve 中可以接受一个 promise (Promise.resolve同样)
 es规范中:
 <blockquote>
@@ -139,3 +176,36 @@ A promise is resolved if it is settled or if it has been “locked in” to matc
 
 ref:
 https://github.com/getify/You-Dont-Know-JS/blob/master/async%20%26%20performance/ch3.md
+
+
+
+
+在es的规范中，对于promise这样的job，有写到当一个promise被resolve的时候，将其回调enqueue job。可以理解当其resolve在js中执行时是同步的，但是大部分时候，resolve是在implementation中被触发的。比如setTimeout, fire之后再去resolve这个promise，那么从settimeout触发到resolve到enqueue job是一个什么顺序呢？   
+es规范 25.6.1.3.2Promise Resolve Functions 的第12步， perform enqueueJob(...)   
+是不是可以这样理解，setTimeout调用了宿主的接口，传给宿主对应的回调。而timeout是当前宿主的eventloop的task queue之一；当timeout fire的时候，宿主将这个回调放入对应的task queue中；js engine在自己的event loop运行到获取task queue时(实际上，这个操作应该是受宿主控制的；es规范中没有对执行task queue中job的顺序进行规定，而将之留给了实现。所以这里是宿主在设定这些task queue的执行规则。es规范中做了规定的只是: 1. 当一个job开始被js engine执行，它总是执行到结束，即 run to completion；2. 只有在 execution context stack 为空时才会从task queue中取job执行。所以这里的"js engine在自己的event loop运行到获取task queue时"对于js engine来说只要ec stack为空就可以了)，宿主会控制哪个task queue中的job送给js engine去执行。  
+而在浏览器中，实际上是将promise放在一个叫micro task queue的task queue中，当js engine的ec stack为空时，浏览器总是优先将micro task中的job送给它执行；只有当micro task queue空了，浏览器才会去取其它的 task queue 中的job来给js engine去执行。   
+回到上面在 setTimeout 中去 resolve promise 的问题。timeout是一个属于时间的 task queue中的，只有当这个 timeout 的job被执行了，才会执行到 resolve promise，然后将这个 promise 的回调 enqueue 到 micro task queue 中。所以，虽然可以将一个 setTimeout 改造成 promise，但如果这个 timeout 的回调始终没有被js engine执行(js engine 阻塞)，那么这个promise 是不会 resolve 的。   
+如果fetch的实现就像github的polyfill一样，使用 xhr，在其回调中 resolve 这个promise，那么多个 fetch一定是会间隔执行的，即在fetch的回调中resolve的promise会早于下一个fetch的回调执行。   
+(我在一个promise 的回调中 resolve另外一个promise，另一个promise一定会在当前promise的回调执行完后立即执行；所以我可以利用这种办法去模拟fetch，证明fetch不是一个简单的promise。)    
+我需要再去看的，是html里是如何规定fetch的执行的，跟xhr有什么不一样？这才能根本解决原生 fetch 的困惑。   
+
+
+搞清楚这个问题有什么用？   
+如果在fetch的回调重要进行长时间的处理(数据集很大)，我们可能会想将这些操作以异步形式进行处理，比如promise；但如果同时发出了多个fetch，在其中一个的回调执行时，另外一个可能也响应了。那么我在回调中再触发promise来处理数据的时候，会不会后面响应的fetch的回调(因为也是promise)插入到当前回调中新触发的promise前面？搞清楚上面的问题，就知道是不会的。当一个fetch收到响应，进入回调执行过程，一定是对应的网络请求task已经执行，从而触发了对应的promise，开始进入这个网络请求task的微任务执行流程；在这中间新触发的promise都会排在微任务中；而另外一个fetch的响应，即使这时收到了，也在等待js engine执行完微任务后获取宏任务才可能被执行，从而出发其对应的微任务，所以，两个fetch的回调一定会以宏任务进行界限，在其回调中触发的微任务会连贯地执行完。
+
+
+
+
+### html规范中对于promise的enqueue job的逻辑规定
+??? script execution context是什么，与 JavaScript execution context stack 的区别？   
+就是后者，只是为了将当前的执行环境传给新创建的 PendingJob   
+
+??? 在 html 的 Queue a microtask,中，7.5步直接就将job 执行了？   
+
+在 xhr 的规范中，也没有提到关于回调处理的 task queue 的东西。 。  
+
+
+
+> An ongoing fetch can be terminated with flag aborted, which is unset unless otherwise specified.
+
+所以fetch 是可以 取消的么？

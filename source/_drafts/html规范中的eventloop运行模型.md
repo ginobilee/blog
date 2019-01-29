@@ -3,14 +3,18 @@ title: Html
 date: 2019-01-24 19:17:41
 tags:
 ---
-`eventloop`是一个经常被提起的话题。且经常以"讲下js中的eventloop"开始。要搞清楚这个问题，要把`js`分成两个部分: es规范和js运行时。es规范中阐述了运行时的一些规则，比如执行上下文栈，Promise等异步任务的处理；但不同的运行时，都可以实现自己的事件循环机制。比如，浏览器所依据的`html`规范中有对于事件循环模型的阐述，`node.js`中也有其自己的事件循环实现，两者并不相同。
+`eventloop`是一个经常被提起的话题。且经常以"讲下js中的eventloop"开始。要搞清楚这个问题，要把`js`分成两个部分: es规范和js宿主。es规范中阐述了运行时的一些规则，比如执行上下文栈，Promise等异步任务的处理；但event loop的实现，其实是在其宿主中进行的。比如，浏览器所依据的`html`规范中有对于事件循环模型的阐述，`node.js`中也有其自己的事件循环实现，两者并不相同。
 
 ### es规范中的 Job 模型
-es规范中利用 Job 和 PendingJob 来阐述异步操作。比如 `Promise`，
+在es6之前，es规范并没有任何对于异步处理的规定。es规范只是规定了脚本执行时 `execution context stack` 的管理。   
+而对于交给js engine执行的脚本，它的运行原则就是 executes to completion。而所有的异步操作，都是其宿主在进行管理。比如 `setTimeout`，就是一个浏览器的接口，es规范中并无涉及。   
+es6中增加了 `Promise`，这是在语言层面上首次增加了对于异步操作的支持。一个`Promise`，就是一个`Future value` 的占位符，利用这个占位符，可以发起异步的执行请求。规范中利用 `Job` 和 `PendingJob` 来阐述其运行机制。`Job`需要等到es engine空闲时才可以进行；`PendingJob`就是一个在未来某个时间执行 `Job` 的请求。`Promise`类型的`PendingJob`被推入`PromiseJobs`，这是一个先入先出的队列结构。规范中只规定了，`PromiseJobs`中的`Job`应该以其入队顺序被依次执行，但如果宿主有多个`JobQueue`，它们之间的顺序宿主可以自己规定。   
+不得不说，es规范的这个异步模型确实比较简陋，没有对`PromiseJobs`的执行时机做更多要求。我想也是为了给浏览器留出实现的自由度。而浏览器的规范，HTML中其实一直有异步操作的执行规范，这就是大家常说的event loop。在看这个规范之前，不妨看看
+其实这个逻辑是一直在浏览器中被使用的，不得不说es规范此处对于
 
 
 <blockquote>
-7.1.4.2. Processing model
+8.1.4.2. Processing model
 
 An event loop must continually run through the following steps for as long as it exists:
  
@@ -68,7 +72,7 @@ An event loop must continually run through the following steps for as long as it
 	There are many factors that affect the ideal update frequency for the top-level browsing context including performance, power, background operation, quality of user experience, refresh rate of display(s), etc. When in foreground and not constrained by resources (i.e. performance, battery versus mains power, other resource limits), the user agent normally prioritizes for maximum quality of user experience for that set of Documents by matching update frequency and animation frame callback rate to the current refresh rate of the current display (usually 60Hz, but refresh rate may be higher or lower). When accommodating constraints on resources, the update frequency might automatically run at a lower rate. Also, if a top-level browsing context is in the background, the user agent might decide to drop that page to a much slower 4Hz, or even less.
 
 	注意：
-	有许多因素都会影响顶级浏览环境的理想刷新频率，比如性能，power，后台操作，用户体验质量，显示器更新频率等等。当页面处于前台且不受资源(如性能，电池等其它资源)所限，ua通常会以当前显示器的刷新频率来执行刷新和动画帧的回调，以达到最佳的用户体验。但当受资源限制时，更新频率通常会自动降低。同样，当一个顶级浏览环境处于后台，ua可能会将其更新降低至4Hz或更低。
+	有许多因素都会影响顶级浏览环境的理想刷新频率，比如性能，power，后台操作，用户体验质量，显示器更新频率等等。当页面处于前台且不受资源(如性能，电池等其它资源)所限，ua通常会以当前显示器的刷新频率来执行刷新和动画帧的回调，以达到最佳的用户体验。但当受资源限制时，更新频率通常会自动降低。同样，当一个顶级浏览环境处于后台，ua可能会将其更新频率降低至4Hz或更低。
 
 	Note:
 	Another example of why a browser might skip updating the rendering is to ensure certain tasks are executed immediately after each other, with only microtask checkpoints interleaved (and without, e.g., animation frame callbacks interleaved). For example, a user agent might wish to coalesce callbacks together, with no intermediate rendering updates. However, when are no constraints on resources, there must not be an arbitrary permanent user agent limit on the update rate and animation frame callback rate (i.e., high refresh rate displays and/or low latency applications).
@@ -87,11 +91,11 @@ An event loop must continually run through the following steps for as long as it
 
 	7.5 For each fully active Document in docs, run the resize steps for that Document, passing in now as the timestamp. [CSSOM-VIEW]
 
-	遍历docs中有效的Document，执行resize操作，时间戳为now。[CSSOM构建]
+	遍历docs中有效的Document，执行resize操作(***注2***)，时间戳为now。[CSSOM构建]
 
 	7.6 For each fully active Document in docs, run the scroll steps for that Document, passing in now as the timestamp. [CSSOM-VIEW]
 
-	遍历docs中有效的Document，执行scroll操作，时间戳为now。[CSSOM构建]
+	遍历docs中有效的Document，执行scroll操作(***注3***)，时间戳为now。[CSSOM构建]
 
 	7.7 For each fully active Document in docs, evaluate media queries and report changes for that Document, passing in now as the timestamp. [CSSOM-VIEW]
 
@@ -108,7 +112,7 @@ An event loop must continually run through the following steps for as long as it
 
 	7.10 For each fully active Document in docs, run the animation frame callbacks for that Document, passing in now as the timestamp.
 
-	遍历docs中有效的Document，执行动画帧回调(***注2***)，时间戳为now。[CSSOM构建]
+	遍历docs中有效的Document，执行动画帧回调(***注4***)，时间戳为now。[CSSOM构建]
 
 	7.11 For each fully active Document in docs, update the rendering or user interface of that Document and its browsing context to reflect the current state.
 	
@@ -139,15 +143,48 @@ A browsing context has a corresponding WindowProxy object.
 A browsing context has a session history, which lists the Document objects that the browsing context has presented, is presenting, or will present. At any time, one Document in each browsing context is designated the active document. A Document's browsing context is that browsing context whose session history contains the Document, if any. (A Document created using an API such as createDocument() has no browsing context.) Each Document in a browsing context is associated with a Window object.
 </blockquote>
 
-2. 即通过requestAnimationFrame设置的回调。见html规范7.9. Animation Frames中。
+2. resize 
 
-3. what's WindowProxy?
+对于resize事件的处理，见 https://drafts.csswg.org/cssom-view/#run-the-resize-steps
+
+3. scroll
+
+同上，对于scroll事件的处理，见 https://drafts.csswg.org/cssom-view/#run-the-scroll-steps
+
+4. 即通过requestAnimationFrame设置的回调。见html规范7.9. Animation Frames中。
+5. what's WindowProxy?
    
 	A WindowProxy is an exotic object that wraps a Window ordinary object, indirecting most operations through to the wrapped object. Each browsing context has an associated WindowProxy object. **When the browsing context is navigated, the Window object wrapped by the browsing context’s associated WindowProxy object is changed.**
 
 	Every WindowProxy object has a [[Window]] internal slot representing the wrapped Window object.
+	
+6. es规范从几开始有 Job 的？比如 scriptjob???
+7. requestIdleCallback 注册的回调在什么时候执行？
+8. 浏览器的 event loop 和 刷新帧是两个概念。前者是运行时级别的，后者是渲染级别的？一个刷新帧，可能会有event loop的多个loop，这时就可能把其中的改动合并；也有可能一个loop持续了多个刷新帧，这时候就可能表现为页面卡顿。
+9. chrome 中的 js引擎是什么，v8？webkit呢？它的主线程应该不是跑的js，那么主线程是如何跟v8通信的？
 
-4. es规范从几开始有 Job 的？比如 scriptjob???
+
+### requestAnimationFrame 与 HTML 的 eventloop
+requestAnimationFrame 是一个 task 么？  
+看到很多文章在讲到浏览器的 event loop 与 requestAnimationFrame 时，都将任务分为宏任务与微任务，然后将 requestAnimationFrame 归入宏任务。
+		1.  这个描述不准确。
+		2.  requestAnimationFrame 是注册了一个在浏览器执行渲染时的回调。浏览器在evnt loop的一个loop内调用这个api的回调的时机是固定的，且当执行到调用它的回调的时候，会将此时该浏览器环境的所有 requestAnimationFrame 回调一次执行完(我们可以在requestAnimationFrame中注册一个很长时间执行的操作，看多个 requestAnimationFrame 的回调是否还会连续执行。是的，完全证实了我的认识，多个requestAnimationFrame会在执行到它的时机一次执行完。)
+		3.  所以，requestAnimationFrame 的回调的执行时机总是在渲染前。虽然 requestAnimationFrame 中也可以进行 promise/timeout 等等异步流的生成，但其实这些都不是使用这个api的正确方式。这个api就应该拿来做视图的变更，操作都应该是同步的。如果希望在下一次渲染时执行其它操作，可以在其回调中继续调用 requestAnimationFrame 来注册，但不应该使用 promise/timeout 等等流控手段进行。
+		4.  从上一点可以看出，requestAnimationFrame 的一个重大好处，就是可以将一个loop中的多个该类型回调 **一次执行完**。这实际上达到了一个batch 的效果，。
+		5.  如果在两个settimeout中都有 requestAnimationFrame，但是没有 dom 变更，会怎么样？
+		6.  一个loop 不等于 一个渲染帧。如果我们把每次(批) requestAnimation 的执行标志为一个渲染帧(因为它总是在渲染前执行)。 requestAnimationFrame 其实保证的是其执行频率与浏览器的渲染频率保持一致。这里有两个不同的概念: 浏览器的event loop，以及浏览器的渲染帧。一个渲染帧内可能只有一个loop(一个loop一定存存在于某一个渲染帧，当loop运行时间过长影响了渲染，就表现为卡顿，这时候浏览器也肯定会执行渲染操作，除非因为电力等因素不执行)，也可能有多个loop；而 requestAnimationFrame 注册的回调一定是在浏览器执行渲染时才会被调用。是这样的么？
+		7.  我是不是应该去看看 chrome 的实现代码？
+
+> If you've been using requestAnimationFrame you've enjoyed seeing your paints synchronized to the refresh rate of the screen
+https://developers.google.com/web/updates/2012/05/requestAnimationFrame-API-now-with-sub-millisecond-precision
+
+
+
+首先对于 js engine，其实是不知道什么event loop的。它只是对于交给它的脚本，run to completion。所以它也并不会区分 micro task或者macro task。   
+去区分的是js的实现，例如浏览器。html规范里规定了
+
+
+
 
 
 【ref】: 
@@ -155,3 +192,6 @@ A browsing context has a session history, which lists the Document objects that 
 https://www.w3.org/TR/html52/webappapis.html#event-loops-processing-model
 
 https://www.w3.org/TR/html52/browsers.html#browsing-context
+
+
+
