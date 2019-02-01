@@ -117,4 +117,5 @@ Promise:  2
 ref:   
 1. [Fetch Living Standard](https://fetch.spec.whatwg.org/)   
 2. [event loop in HTML](https://html.spec.whatwg.org/multipage/webappapis.html#event-loop-processing-model)
+3. [MDN MutationObserver](https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver/MutationObserver)
 
