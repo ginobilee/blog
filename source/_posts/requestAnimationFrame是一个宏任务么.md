@@ -1,5 +1,5 @@
 ---
-title: requestAnimationFrame回调在HTML的Event Loop中是一个宏任务么?
+title: requestAnimationFrame是一个宏任务么
 date: 2019-02-01 08:18:06
 tags:
 ---
@@ -8,7 +8,7 @@ tags:
 
 规范中提到了几种常见的任务: DOM操作、用户交互、网络请求和浏览器history变更。它们都是我们常说的宏任务之属。而微任务就包括Promise、MutationObserver等等。一般的，只要一个api是异步操作，它必定是通过任务的机制运行的。那么对于 `requestAnimationFrame`(简称raf)，它是一个宏任务还是微任务呢？ 
 
-因为这篇文章严重依赖于前述规范，特意将对应章节进行了[简单翻译]()。
+因为这篇文章严重依赖于前述规范，特意将对应章节进行了[简单翻译](https://ginobilee.github.io/blog/2019/01/31/whatwg-html%E4%B8%AD%E7%9A%84event%20loop%E6%A8%A1%E5%9E%8B/)。
 
 ### 概念
 在讨论之前，我想先界定一下文章里要讨论到的几个概念:
@@ -83,12 +83,12 @@ To run the animation frame callbacks for a target object target with a timestamp
 
 ps，篇尾引用3是一篇关于事件循环的很好的讨论，本文的缘起也正是在其中论到 requestAnimationFrame。
 
-todo: 
+### todo: 
  - [ ] chrome在一个loop的开始时检查哪些任务？它们是所谓的宏任务。
 
 
 
-ref:
+### ref:
 1. [HTML - Web application APIs](https://html.spec.whatwg.org/multipage/webappapis.html#event-loop-processing-model)
 2. [ECMAScript - Jobs and Job Queues](https://tc39.github.io/ecma262/#sec-jobs-and-job-queues)
 3. [从event loop规范探究javaScript异步及浏览器更新渲染时机 - 杨敬卓](https://github.com/aooy/blog/issues/5)
