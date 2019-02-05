@@ -66,17 +66,18 @@ RenderViewHost 和 RenderWidgetHost (browser进程) 可以认为是 RenderView �
 > Each request(已经到了browser管理中) is then converted into a URLRequest object, which in turn forwards it to its internal URLRequestJob that implements the specific protocol desired. When the URLRequest generates notifications, its ResourceDispatcherHost::Receiver and request ID are used to send the notification to the correct RenderProcessHost for sending back to the renderer. 
 
 ### todo
-1. Blink 与 Webkit 的角色一样么？区别是什么？
+- [ ] Blink 与 Webkit 的角色一样么？区别是什么？
    角色一样。区别？
-2. WebContents 层的引擎是什么，是不是重绘总是发生在 renderer 进程中，所以会影响性能；而css的transform的改变发生在browser的WebContents层，所以不会影响性能？
-3. event loop的一个loop可以认为是renderer的一次循环，一个渲染帧呢？比如会触发 requestAnimationFrame 回调 的一个帧？
-4. breakpad: Google's open source crash reporting project. This is pulled directly from Google Code's Subversion repository.    我能拿来用么？
-5. ui/views: A simple framework for doing UI development, providing rendering, layout and event handling. Most of the browser UI is implemented in this system.    可以去看看有什么东西
-6. 总结完后再去看(Threading and Tasks in Chrome)[https://chromium.googlesource.com/chromium/src/+/master/docs/threading_and_tasks.md]，感觉这里参考的三篇文档只是一个抽象的描述，具体实现要复杂的多。加油  
+- [ ] WebContents 层的引擎是什么，是不是重绘总是发生在 renderer 进程中，所以会影响性能；而css的transform的改变发生在browser的WebContents层，所以不会影响性能？
+- [ ] event loop的一个loop可以认为是render thread内的一次循环标志了一个loop。一个渲染帧呢？比如会触发 requestAnimationFrame 回调 的一个帧，对于chrome来说以什么标志一个帧，或者说是帧之间的边界？
+- [ ] 总结完后再去看[Threading and Tasks in Chrome](https://chromium.googlesource.com/chromium/src/+/master/docs/threading_and_tasks.md)，感觉这里参考的三篇文档只是一个抽象的描述，具体实现要复杂的多。加油  
+- [ ] 在chrome dev tool中，一个loop中进行的 Recalculate Style/Update Style/Paint/Composite ，以及raster(栅格化)和gpu分别对应这里哪一块?  
 
 
 
 ### ref
-(Multi-process Resource Loading)[https://www.chromium.org/developers/design-documents/multi-process-resource-loading]
-(How Chromium Displays Web Pages)[https://www.chromium.org/developers/design-documents/displaying-a-web-page-in-chrome]
+[Multi-process Resource Loading](https://www.chromium.org/developers/design-documents/multi-process-resource-loading)
+[How Chromium Displays Web Pages](https://www.chromium.org/developers/design-documents/displaying-a-web-page-in-chrome)
 [Getting Around the Chromium Source Code Directory Structure](https://www.chromium.org/developers/how-tos/getting-around-the-chrome-source-code)
+[Threading and Tasks in Chrome
+](https://chromium.googlesource.com/chromium/src/+/master/docs/threading_and_tasks.md)
