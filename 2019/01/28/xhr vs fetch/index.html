@@ -16,7 +16,6 @@
 <li>event loop在执行到当前循环的微任务检查点时执行该promise的响应</li>
 </ol>
 <p>即，对于fetch，其实浏览器还是沿用一样的网络请求处理逻辑，只是在响应时，推入对应任务队列的任务，执行了将promise回调推入微任务的动作。  </p>
-<p><hr></p>
 <h3 id="搞清楚这个问题有什么用？"><a href="#搞清楚这个问题有什么用？" class="headerlink" title="搞清楚这个问题有什么用？"></a>搞清楚这个问题有什么用？</h3><p>在使用 xhr 时，在其回调中利用 promise 将任务放入微任务队列中，这个微任务一定会早于其它触发的 xhr 执行；如果对 fetch 上述模型不了解，会去想是否 fetch 中新触发的 promise 会晚于其它并发收到 fetch 的响应？在对处理顺序有要求的场合，这里就会影响到是否可以在回调中使用 promise 进行异步处理。搞清楚多个 fetch 的回调仍然会走 event loop 的多个loop，就明白是否会对程序的执行流产生影响。   </p>
 <hr>
 
@@ -24,5 +23,6 @@
 <ol>
 <li><a href="https://fetch.spec.whatwg.org/" target="_blank" rel="noopener">Fetch Living Standard</a>   </li>
 <li><a href="https://html.spec.whatwg.org/multipage/webappapis.html#event-loop-processing-model" target="_blank" rel="noopener">event loop in HTML</a></li>
+<li><a href="https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver/MutationObserver" target="_blank" rel="noopener">MDN MutationObserver</a></li>
 </ol>
 </div></article></div></main><footer><div class="paginator"><a href="/blog/2019/01/28/webpack中异步加载的逻辑/" class="prev">PREV</a><a href="/blog/2019/01/25/我欲建立的知识结构模型/" class="next">NEXT</a></div><div class="copyright"><p>© 2019 <a href="https://ginobilee.github.io">mg20</a>, powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/pinggod/hexo-theme-apollo" target="_blank">hexo-theme-apollo</a>.</p></div></footer></div><script async src="//cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML" integrity="sha384-crwIf/BuaWM9rM65iM+dWFldgQ1Un8jWZMuh3puxb8TOY9+linwLoI7ZHZT+aekW" crossorigin="anonymous"></script></body></html>

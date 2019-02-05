@@ -2,9 +2,23 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>https://ginobilee.github.io/2019/02/01/requestAnimationFrame%E5%9B%9E%E8%B0%83%E5%9C%A8HTML%E7%9A%84Event%20Loop%E4%B8%AD%E6%98%AF%E4%B8%80%E4%B8%AA%E5%AE%8F%E4%BB%BB%E5%8A%A1%E4%B9%88?/</loc>
+    
+    <lastmod>2019-02-05T02:51:35.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://ginobilee.github.io/2019/02/02/whatwg-html%E4%B8%AD%E7%9A%84event%20loop%E6%A8%A1%E5%9E%8B/</loc>
+    
+    <lastmod>2019-02-04T18:36:45.000Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>https://ginobilee.github.io/2019/01/28/xhr%20vs%20fetch/</loc>
     
-    <lastmod>2019-02-01T13:49:39.000Z</lastmod>
+    <lastmod>2019-02-01T14:19:12.000Z</lastmod>
     
   </url>
   
