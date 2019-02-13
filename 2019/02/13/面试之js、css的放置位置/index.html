@@ -1,0 +1,51 @@
+<!DOCTYPE html><html lang="ch"><head><meta name="generator" content="Hexo 3.8.0"><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><title> 面试之js、css的放置位置 · mg20</title><meta name="description" content="面试之js、css的放置位置 - mg20"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" href="/blog/favicon.png"><link rel="stylesheet" href="/blog/css/apollo.css"><link rel="search" type="application/opensearchdescription+xml" href="https://ginobilee.github.io/atom.xml" title="mg20"></head><body><div class="wrap"><header><a href="/blog/" class="logo-link"><img src="/blog/favicon.png" alt="logo"></a><ul class="nav nav-list"><li class="nav-list-item"><a href="/blog/" target="_self" class="nav-list-link">BLOG</a></li><li class="nav-list-item"><a href="/blog/archives/" target="_self" class="nav-list-link">ARCHIVE</a></li><li class="nav-list-item"><a href="https://github.com/ginobilee" target="_blank" class="nav-list-link">GITHUB</a></li><li class="nav-list-item"><a href="/blog/atom.xml" target="_self" class="nav-list-link">RSS</a></li></ul></header><main class="container"><div class="post"><article class="post-block"><h1 class="post-title">面试之js、css的放置位置</h1><div class="post-info">Feb 13, 2019</div><div class="post-content"><p>这些问题自己之前也思考过，也在通过阅读规范、chrome文档以及浏览器测试总结。刚好面试中问到了，就此总结一下。</p>
+<h3 id="doctype-声明有什么作用，如果不写会怎么样？如果把一个html5-的文档当作其它文档类型解析了会怎么样？"><a href="#doctype-声明有什么作用，如果不写会怎么样？如果把一个html5-的文档当作其它文档类型解析了会怎么样？" class="headerlink" title="doctype 声明有什么作用，如果不写会怎么样？如果把一个html5 的文档当作其它文档类型解析了会怎么样？"></a>doctype 声明有什么作用，如果不写会怎么样？如果把一个html5 的文档当作其它文档类型解析了会怎么样？</h3><p>html5已经不是SGML语言的子集，因此不再需要文档类型定义。实际上，浏览器现在只是通过DOCTYPE 声明来决定使用何种模式(standard mode/quirk mode)来进行文档解析和渲染。</p>
+<blockquote>
+<p>DOCTYPEs are required for legacy reasons. <strong><em>When omitted, browsers tend to use a different rendering mode that is incompatible with some specifications. Including the DOCTYPE in a document ensures that the browser makes a best-effort attempt at following the relevant specifications.</em></strong></p>
+</blockquote>
+<blockquote>
+<p>In HTML5, the only purpose of the DOCTYPE is to activate full standards mode. Older versions of the HTML standard gave additional meaning to the DOCTYPE, but no browser has ever used the DOCTYPE for anything other than switching between quirks mode and standards mode.</p>
+</blockquote>
+<h3 id="js和css的放置位置"><a href="#js和css的放置位置" class="headerlink" title="js和css的放置位置"></a>js和css的放置位置</h3><h4 id="为什么要把-css-放在-head里，而js-放在-body-后？js应该放在-后还是前？"><a href="#为什么要把-css-放在-head里，而js-放在-body-后？js应该放在-后还是前？" class="headerlink" title="为什么要把 css 放在 head里，而js 放在 body 后？js应该放在  后还是前？"></a>为什么要把 css 放在 head里，而js 放在 body 后？js应该放在  后还是前？</h4><ol>
+<li>非异步形式的 script，其 <strong><em>加载和执行</em></strong> 都会阻塞 dom解析。即 dom解析会停在 脚本加载处，直到其被加载和执行，才会继续。但是要注意，<strong><em>阻塞 dom 解析，并不是阻塞渲染。浏览器还是会对已经解析的dom进行 样式计算/渲染等操作</em></strong></li>
+<li>放在  前或者后，实质上是阻止了 body 元素的解析完成。在其前放置，则 body 节点尚未关闭；放在其后，则前面 html 的解析已经知道body已完成。</li>
+<li>浏览器不是等待所有文档解析完成才展示，而是当一部分文档达到了展示的条件，就将其展示。因此从尽快展示部分文档的角度出发(非可交互，而是度过白屏)，应该让js放在标签之后。</li>
+<li>defer:<ol>
+<li>执行顺序与引用顺序一致</li>
+<li><strong><em>加载和执行</em></strong> 都不会阻塞 dom解析</li>
+<li>因此会等到 dom解析完再执行</li>
+<li>会在执行完这类脚本后才触发 Domcontentloaded，因此相当于阻塞该事件。当然也阻塞 load 事件。</li>
+<li>对 module scripts 类型的脚本无效。该类脚本默认具有 defer 的效果。</li>
+<li>defer: indicate to a browser that the script is meant <strong><em>to be executed after the document has been parsed, but before firing DOMContentLoaded</em></strong>.</li>
+</ol>
+</li>
+<li>async:<ol>
+<li><strong><em>加载</em></strong> 时不阻塞 dom的解析，但是加载到了后就会进行执行。因此 <strong><em>执行</em></strong> 可能打断 dom解析(进而延迟Domcontentloaded事件)。但如果脚本加载很慢，使用async 则不会阻塞 Domcontentloaded 事件的触发。但仍然会阻塞 load 事件的触发。</li>
+<li>执行顺序不能保证与引用顺序一致</li>
+</ol>
+</li>
+<li>外部css 文件的加载会阻塞 dom解析 么？会阻塞渲染么？<ol>
+<li>既不会阻塞解析，也不会阻塞渲染(chrome观察得出)</li>
+<li>但延迟加载的css会导致样式重新计算，从而导致 无样式闪烁 问题</li>
+</ol>
+</li>
+</ol>
+<blockquote>
+<p>The async and defer attributes are boolean attributes that indicate how the script should be evaluated. Classic scripts may specify defer or async, but must not specify either unless the src attribute is present. Module scripts may specify the async attribute, but must not specify the defer attribute.</p>
+</blockquote>
+<blockquote>
+<p>For classic scripts, if the async attribute is present, then the classic script will be fetched in parallel to parsing and evaluated as soon as it is available (potentially before parsing completes). If the async attribute is not present but the defer attribute is present, then the classic script will be fetched in parallel and evaluated when the page has finished parsing. If neither attribute is present, then the script is fetched and evaluated immediately, blocking parsing until these are both complete.</p>
+</blockquote>
+<blockquote><br>The following sample shows how a script element can be used to include an external module script.<br><script type="module" src="app.mjs"></script><br>This module, and all its dependencies (expressed through JavaScript import statements in the source file), will be fetched. Once the entire resulting module graph has been imported, and the document has finished parsing, the contents of app.mjs will be evaluated.<br>Additionally, if code from another script element in the same Window imports the module from app.mjs (e.g. via import “./app.mjs”;), then the same module script created by the former script element will be imported.<br></blockquote>
+
+<p>从规范对于module类脚本的阐述来看，其默认带有了classic脚本的defer效果。结合前面的分析，defer也是更合理的异步脚本加载方式。跟放在之后相比，defer完全不阻塞dom的解析；跟async相比，它会延迟执行直到dom解析完，并在Domcontentloaded事件前触发。</p>
+<h4 id="在浏览器中实验的小技巧"><a href="#在浏览器中实验的小技巧" class="headerlink" title="在浏览器中实验的小技巧"></a>在浏览器中实验的小技巧</h4><p>这类问题，要在浏览器中可视化地看到差异和效果，不太好控制。如果不想采用自己控制server端响应的方法，可以采用 chrome 中对于 cpu throttle 和 Network throttle 来模拟各种情况，可以方便快捷地达到各种测验场景。</p>
+<h3 id="todo"><a href="#todo" class="headerlink" title="todo"></a>todo</h3><ul>
+<li style="list-style: none"><input type="checkbox" checked> 如果将 defer 的script 放在头部，是否会先于文档中的 img 下载，进而在此类文档很多时影响 img 的下载？  </li>
+</ul>
+<p>实验后发现，defer 的脚本与文档中的 img 引用的图片，优先级都是 low。但因为两者的域名不同，并没有受到下载线程并发个数的影响，图片的下载没有被脚本下载所阻塞。</p>
+<h3 id="ref"><a href="#ref" class="headerlink" title="ref"></a>ref</h3><ol>
+<li><a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Quirks_Mode_and_Standards_Mode" target="_blank" rel="noopener">mdn Quirks_Mode_and_Standards_Mode</a></li>
+<li><a href="https://html.spec.whatwg.org/multipage/syntax.html#the-doctype" target="_blank" rel="noopener">html spec the-doctype</a></li>
+</ol>
+</div></article></div></main><footer><div class="paginator"><a href="/blog/2019/02/13/面试之函数的柯里化技巧/" class="next">NEXT</a></div><div class="copyright"><p>© 2019 <a href="https://ginobilee.github.io">mg20</a>, powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/pinggod/hexo-theme-apollo" target="_blank">hexo-theme-apollo</a>.</p></div></footer></div><script async src="//cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML" integrity="sha384-crwIf/BuaWM9rM65iM+dWFldgQ1Un8jWZMuh3puxb8TOY9+linwLoI7ZHZT+aekW" crossorigin="anonymous"></script></body></html>
