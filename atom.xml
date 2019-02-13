@@ -6,7 +6,7 @@
   <link href="/blog/atom.xml" rel="self"/>
   
   <link href="https://ginobilee.github.io/"/>
-  <updated>2019-02-05T03:13:12.000Z</updated>
+  <updated>2019-02-13T13:58:46.000Z</updated>
   <id>https://ginobilee.github.io/</id>
   
   <author>
@@ -15,6 +15,30 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>面试之函数的柯里化技巧</title>
+    <link href="https://ginobilee.github.io/2019/02/13/%E9%9D%A2%E8%AF%95%E4%B9%8B%E5%87%BD%E6%95%B0%E7%9A%84%E6%9F%AF%E9%87%8C%E5%8C%96%E6%8A%80%E5%B7%A7/"/>
+    <id>https://ginobilee.github.io/2019/02/13/面试之函数的柯里化技巧/</id>
+    <published>2019-02-13T13:02:20.000Z</published>
+    <updated>2019-02-13T13:58:46.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>记录下面试的车祸现场</p><h3 id="车祸现场"><a href="#车祸现场" class="headerlink" title="车祸现场"></a>车祸现场</h3><p>面试官出了如下一道题目:<br>封装一个模块，需要这个模块能够支持运算如 <code>curr(7, 8, 9) === curr(7, 8)(9) === curr(7)(8)(9)</code>。即可以用不定的参数调用之，都能实现参数相加。<br>面试官也提到了用柯里化的思路实现。  </p><p>我记得函数的柯里化能够给函数提供动态设定参数的能力，比如原本函数接受3个参数，可以利用柯里化实现一个新的函数，将原函数的第一个参数固定为某个值，新函数可以继续接受两个参数完成原函数的运算。<br>事实上，这其实是 <strong><em>偏函数</em></strong> 。<br>要实现固定参数个数的函数柯里化，是没有问题的。但如果要实现可变参数个数的函数柯里化，这个可能么？<br>柯里化的思路，都是判断参数个数是否满足要求，满足则进行计算；否则返回一个函数，等待参数满足后进行计算。如果参数个数是可变的，那么怎么能实现呢？我怎么判断一个函数是应该输出一个数值，还是返回一个接受参数的函数呢？毕竟，我并不知道当前函数的返回结果，会被当成函数还是数值输出的。</p><p>也许面试官是刻意想让我通过沟通来搞清楚这些问题。但我就自以为需要允许接受多个参数，然后陷入了沉思。  </p><p>思考良久后，面试官也看出我的问题。于是给我精简了问题，只要写一个函数，能够通过如下测试即可:<br><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">curr(<span class="number">7</span>, <span class="number">8</span>, <span class="number">9</span>) === <span class="number">24</span></span><br><span class="line">curr(<span class="number">7</span>, <span class="number">8</span>)(<span class="number">9</span>) === <span class="number">24</span></span><br><span class="line">curr(<span class="number">7</span>)(<span class="number">8</span>)(<span class="number">9</span>) === <span class="number">24</span></span><br></pre></td></tr></table></figure></p><p>这样一个函数肯定是能够实现的。但此时我的思路已经受到前面思考的影响，开始将思路放在把 <code>curr(7, 8, 9)</code> 转化为 <code>curr(7, 8)(9)</code>，然后把<code>curr(7, 8)(9)</code> 再转化为 <code>curr(7)(8)(9)</code> 上。而在转化之后，就需要在 <code>curr</code> 函数中判断输入参数为1个时返回一个函数，其中又返回一个返回函数的函数。嗯，光是把这个话打出来就够麻烦的了。  </p><p>这个时候，如果我能及时地想到，应该反过来，将 <code>curr(7)(8)(9)</code> 转为 <code>curr(7, 8)(9)</code>，再将 <code>curr(7, 8)(9)</code> 转为 <code>curr(7, 8, 9)</code>，然后将其计算输出，就能回归到柯里化的正确思路上来了。  </p><p>而且，一个函数 <code>curr(7, 8, 9)</code>，为什么要将其当成 <code>curr(7, 8)(9)</code> 执行呢？一个函数变成两个函数，完全是增加复杂度。</p><hr><p>其实，只要搞清楚，柯里化的目的是为了参数收集，而不是参数分散，就能想清楚问题。<br>既然是参数收集，一定要确定要收集的参数的个数。这个参数如何确定呢？就根据柯里化的目标函数的行参个数确定。<br>如此，柯里化返回这样一个函数: 只要其收集的参数个数不满足原函数行参的要求，就继续收集；否则调用原函数计算结果。<br>理清思路后，写代码就是极其简单的一件事:<br><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">curry</span>(<span class="params">fn, ...args1</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> <span class="function"><span class="keyword">function</span>(<span class="params">...args2</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">const</span> args = args1.concat(args2)</span><br><span class="line">    <span class="keyword">if</span> (args.length &lt; fn.length) &#123;</span><br><span class="line">      <span class="keyword">return</span> curry(fn, ...args)</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="keyword">return</span> fn(...args)</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">add</span>(<span class="params">a, b, c</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> a + b + c</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">const</span> curr = curry(add)</span><br></pre></td></tr></table></figure></p><p>甚至，使用箭头函数，可以以更简洁的形式编写:<br><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> curry = <span class="function">(<span class="params">fn, ...args1</span>) =&gt;</span> (...args2) =&gt; (args1.concat(args2).length &lt; fn.length ? curry(fn, ...args1, ...args2) : fn(...args1, ...args2))</span><br></pre></td></tr></table></figure></p><h3 id="偏函数与柯里化"><a href="#偏函数与柯里化" class="headerlink" title="偏函数与柯里化"></a>偏函数与柯里化</h3><p>偏函数其实是固定了一个或多个参数的函数，它再接受参数后一定是返回一个计算结果，而非返回一个函数。<br>函数柯里化是将一个多参数的函数，转化为一个可以分步收集参数的函数。如果收集不满则不计算。</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt;记录下面试的车祸现场&lt;/p&gt;
+&lt;h3 id=&quot;车祸现场&quot;&gt;&lt;a href=&quot;#车祸现场&quot; class=&quot;headerlink&quot; title=&quot;车祸现场&quot;&gt;&lt;/a&gt;车祸现场&lt;/h3&gt;&lt;p&gt;面试官出了如下一道题目:&lt;br&gt;封装一个模块，需要这个模块能够支持运算如 &lt;code&gt;c
+      
+    
+    </summary>
+    
+    
+      <category term="javascript 柯里化" scheme="https://ginobilee.github.io/tags/javascript-%E6%9F%AF%E9%87%8C%E5%8C%96/"/>
+    
+  </entry>
   
   <entry>
     <title>requestAnimationFrame是一个宏任务么</title>
