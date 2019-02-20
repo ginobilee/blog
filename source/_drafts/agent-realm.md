@@ -1,0 +1,1 @@
+> Conceptually, the agent concept is an architecture-independent, idealized "thread" in which JavaScript code runs. Such code can involve multiple globals/realms that can synchronously access each other, and thus need to run in a single execution thread

@@ -14,7 +14,7 @@ html5已经不是SGML语言的子集，因此不再需要文档类型定义。�
 ### js和css的放置位置
 #### 为什么要把 css 放在 head里，而js 放在 body 后？js应该放在 </body> 后还是前？
 1. 非异步形式的 script，其 ***加载和执行*** 都会阻塞 dom解析。即 dom解析会停在 脚本加载处，直到其被加载和执行，才会继续。但是要注意，***阻塞 dom 解析，并不是阻塞渲染。浏览器还是会对已经解析的dom进行 样式计算/渲染等操作***
-2. 放在 </body> 前或者后，实质上是阻止了 body 元素的解析完成。在其前放置，则 body 节点尚未关闭；放在其后，则前面 html 的解析已经知道body已完成。
+2. 从规范角度出发，</body>标签之后不应该再有任何内容，因此放在</body>之后通不过html规范的验证；但实际上浏览器都会兼容这种处理，将script同样当作在</body>内来处理。他们对于性能也没有可以观察到的影响。如果说是不是因为一些遗留原因放在之后更好，这个就不是很清楚了，不过感觉意义不大。
 3. 浏览器不是等待所有文档解析完成才展示，而是当一部分文档达到了展示的条件，就将其展示。因此从尽快展示部分文档的角度出发(非可交互，而是度过白屏)，应该让js放在</body>标签之后。
 4. defer:
   1. 执行顺序与引用顺序一致
@@ -41,7 +41,36 @@ This module, and all its dependencies (expressed through JavaScript import state
 Additionally, if code from another script element in the same Window imports the module from app.mjs (e.g. via import "./app.mjs";), then the same module script created by the former script element will be imported.  
 </blockquote>
 
-从规范对于module类脚本的阐述来看，其默认带有了classic脚本的defer效果。结合前面的分析，defer也是更合理的异步脚本加载方式。跟放在</body>之后相比，defer完全不阻塞dom的解析；跟async相比，它会延迟执行直到dom解析完，并在Domcontentloaded事件前触发。
+从规范对于module类脚本的阐述来看，其默认带有了classic脚本的defer效果。结合前面的分析，defer也是更合理的异步脚本加载方式。跟放在</body>之前相比，defer完全不阻塞dom的解析；跟async相比，它会延迟执行直到dom解析完，并在Domcontentloaded事件前触发。
+
+#### css 如果直接写在html里，它的解析执行会影响dom的解析么？如果两步是分别进行的
+写在 html 里的css，对于dom 来说就是一个 script 节点。它的内容应该是由css 解析器单独解析的，因为其规则与 html 解析规则不一样。那么两者分别解析时，什么时候将两者解析的结果合并处理？是不是 dom 上一个节点处理完了，流式地准备将其进行 render 处理，然后就去查看样式规则(css会最终解析成一条条的规则，还是一棵样式树？cssom 是树结构么？如果是树，那么多个没有关联的样式规则如何整理在一棵树上？应该是一棵树，就算开发者没有写根元素的样式，浏览器会给其添加默认样式，也是以样式表的形式提供的。如此就有了根节点，然后就可以将所有规则构建成一棵树)，然后将节点渲染到页面上。所以，当执行render时，如果样式表为空，那么就会将默认样式渲染在页面上。然后等开发者定义的样式表解析完，再将特定样式附加在对应节点上，然后浏览器重新在页面上重新绘制该元素。  
+以这样的方式来讨论的话，css不会影响或阻塞 首评出现内容的时间，但会影响首屏出现内容的样式。如果css解析地慢，那么首屏出现的内容会发生样式闪烁。所以将css以外链的形式放在head里，也不会影响dom的解析，但会影响首屏内容的渲染结果。再结合浏览器中观察的结果，似乎是先解析dom，然后在样式获取到后进行重新绘制，如果样式获取地早，赶上了第一波绘制前，那么就不会出现样式闪烁？
+
+看来我的以上认识不正确: 
+> 默认情况下，CSS 被视为阻塞渲染的资源，这意味着浏览器将不会渲染任何已处理的内容，直至 CSSOM 构建完毕。
+应该是: css不阻塞 dom 解析，但是阻塞渲染。按照 google 的文档阐述是这样的，在 domcontentloaded 之前不会执行渲染，因为这个事件标志着 dom 和 cssom 的完成，然后才会开始构建 render tree。  
+
+但实际上好像不是这个样子，在 dcl 之前就已经有内容展示在网页中了。  
+很明显的例子是，我在 head 里加载了一个外链css，通过将网速改为慢速，加载此文件需要 5s+，但在加载到它之前网页上就已经有了文档内容。而从 window.performance.timing.domInteractive 获知，这个时间都是与 window.performance.timing.domContentLoaded... 一致的，都在css文件下载之后才触发。所以浏览器并不是css外部链接并不会阻塞浏览器的渲染，但是会阻塞文档的 loaded，以及出现样式闪烁。  
+
+ref:
+[评估关键渲染路径](https://developers.google.com/web/fundamentals/performance/critical-rendering-path/measure-crp)
+
+
+> CSSOM 为何具有树结构？为页面上的任何对象计算最后一组样式时，浏览器都会先从适用于该节点的最通用规则开始（例如，如果该节点是 body 元素的子项，则应用所有 body 样式），然后通过应用更具体的规则（即规则“向下级联”）以递归方式优化计算的样式。
+
+
+关于渲染树(render tree):
+<blockquote>
+1. DOM 树与 CSSOM 树合并后形成渲染树。
+2. 渲染树只包含渲染网页所需的节点。
+3. 布局计算每个对象的精确位置和大小。
+4. 最后一步是绘制，使用最终渲染树将像素渲染到屏幕上。
+</blockquote>
+
+ref:
+[First Contentful Paint](https://developers.google.com/web/tools/lighthouse/audits/first-contentful-paint)
 
 #### 在浏览器中实验的小技巧
 这类问题，要在浏览器中可视化地看到差异和效果，不太好控制。如果不想采用自己控制server端响应的方法，可以采用 chrome 中对于 cpu throttle 和 Network throttle 来模拟各种情况，可以方便快捷地达到各种测验场景。

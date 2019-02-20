@@ -209,3 +209,7 @@ es规范 25.6.1.3.2Promise Resolve Functions 的第12步， perform enqueueJob(.
 > An ongoing fetch can be terminated with flag aborted, which is unset unless otherwise specified.
 
 所以fetch 是可以 取消的么？
+
+### https://developers.google.com/web/fundamentals/primers/promises
+里面利用promise实现页面顺序加载的demo写得很棒，值得学习
+
