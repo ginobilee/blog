@@ -9,15 +9,20 @@ tags:
 
 > Moreover, once a Promise is resolved, it stays that way forever -- it becomes an immutable value at that point -- and can then be observed as many times as necessary.
 
-Note: Because a Promise is externally immutable once resolved, it's now safe to pass that value around to any party and know that it cannot be modified accidentally or maliciously. This is especially true in relation to multiple parties observing the resolution of a Promise. It is not possible for one party to affect another party's ability to observe Promise resolution. Immutability may sound like an academic topic, but it's actually one of the most fundamental and important aspects of Promise design, and shouldn't be casually passed over.
+> Note: Because a Promise is externally immutable once resolved, it's now safe to pass that value around to any party and know that it cannot be modified accidentally or maliciously. This is especially true in relation to multiple parties observing the resolution of a Promise. It is not possible for one party to affect another party's ability to observe Promise resolution. Immutability may sound like an academic topic, but it's actually one of the most fundamental and important aspects of Promise design, and shouldn't be casually passed over.
 
-Promises are an easily repeatable mechanism for encapsulating and composing future values.
+> Promises are an easily repeatable mechanism for encapsulating and composing future values.
 
 使用promise提供对未来结果的placeholder，于是可以继续组织依赖于此未来操作的逻辑。
 
-
 ### how to identify a Promise?
+直接用 instanceof 做检测存在如下问题:
+1. Mainly, you can receive a Promise value from another browser window (iframe, etc.), which would have its own Promise different from the one in the current window/frame, and that check would fail to identify the Promise instance.
+2. a library or framework may choose to vend its own Promises and not use the native ES6 Promise implementation to do so. 
 
+但对这些仍然应该视作 Promise ，所以才会有 duck typing。然而，如果有一个对象碰巧有 then 函数，却不符合 Promise 规范，那就麻烦了。
+
+<blockquote>
 duck typing:  "If it looks like a duck, and quacks like a duck, it must be a duck"  
 the duck typing check for a thenable would roughly be:
 ```javascript
@@ -36,12 +41,7 @@ else {
 }
 ```
  but if you happen to meet some object having 'then' function, where at the same time behaves not like Promise, it may be a disaster...
-
-直接用 instanceof 做检测存在如下问题:
-1. Mainly, you can receive a Promise value from another browser window (iframe, etc.), which would have its own Promise different from the one in the current window/frame, and that check would fail to identify the Promise instance.
-2. a library or framework may choose to vend its own Promises and not use the native ES6 Promise implementation to do so. 
-
-但对这些仍然应该视作 Promise ，所以才会有 duck typing。然而，如果有一个对象碰巧有 then 函数，却不符合 Promise 规范，那就麻烦了。
+</blockquote>
 
 
 > The characteristics of Promises are intentionally designed to provide useful, repeatable answers to all these concerns.
@@ -72,13 +72,8 @@ p2.then( function(v){
 // A B  <-- not  B A  as you might expect
 ```
 
-todo: 还可以在 resolve 中传入一个 promise，看看后面怎么解释规范的规定  
-todo: We'll cover later how to be notified of an error in your callback, because even those don't get swallowed.
 
 > To avoid such nuanced nightmares, you should never rely on anything about the ordering/scheduling of callbacks across Promises. In fact, a good practice is not to code in such a way where the ordering of multiple callbacks matters at all. Avoid that if you can.
-
-
-在 promise 的 then 回调中抛异常会是什么影响？
 
 ### 神奇的 Promise.resolve()
 > Promise.resolve(..) will accept any thenable, and will unwrap it to its non-thenable value. But you get back from Promise.resolve(..) a real, genuine Promise in its place, one that you can trust. If what you passed in is already a genuine Promise, you just get it right back, so there's no downside at all to filtering through Promise.resolve(..) to gain trust.
@@ -115,8 +110,6 @@ p.then(
 
 > Warning: If you use the Promise API in an invalid way and an error occurs that prevents proper Promise construction, the result will be an immediately thrown exception, not a rejected Promise. Some examples of incorrect usage that fail Promise construction: new Promise(null), Promise.all(), Promise.race(42), and so on. You can't get a rejected Promise if you don't use the Promise API validly enough to actually construct a Promise in the first place!
 
-todo: promise.defer ???
-
 
 ### Promise.all
 > Note: Technically, the array of values passed into Promise.all([ .. ]) can include Promises, thenables, or even immediate values. Each value in the list is essentially passed through Promise.resolve(..) to make sure it's a genuine Promise to be waited on, so an immediate value will just be normalized into a Promise for that value. If the array is empty, the main Promise is immediately fulfilled.
@@ -143,12 +136,11 @@ But if resolve(..) is passed a genuine Promise or thenable value, that value is 
 <blockquote>
 Each Promise instance (not the Promise API namespace) has then(..) and catch(..) methods, which allow registering of fulfillment and rejection handlers for the Promise. 
 then(..) takes one or two parameters, the first for the fulfillment callback, and the second for the rejection callback. If either is omitted or is otherwise passed as a non-function value, a default callback is substituted respectively. The default fulfillment callback simply passes the message along, while the default rejection callback simply rethrows (propagates) the error reason it receives.
-(如果在then中没有指定fullfill或reject的handler，会有一个默认的handler，它只是将值继续传递或继续抛出错误)
+(如果在then中没有指定fullfill或reject的handler或指定的handler不是一个function，会有一个默认的handler，它只是将值继续传递或继续抛出错误)
 
 catch(..) takes only the rejection callback as a parameter, and automatically substitutes the default fulfillment callback, as just discussed. In other words, it's equivalent to then(null,..):
-(catch相当于有一个默认fullfill处理器的then，理解这一点很重要。因为catch总会返回一个新的promise，对于实现Promise里说很重要)
-
 </blockquote>
+
 <hr />
 ### limatations of es6 Promise
 > catch(..) takes only the rejection callback as a parameter, and automatically substitutes the default fulfillment callback, as just discussed. In other words, it's equivalent to then(null,..):
@@ -177,34 +169,9 @@ A promise is resolved if it is settled or if it has been “locked in” to matc
 ref:
 https://github.com/getify/You-Dont-Know-JS/blob/master/async%20%26%20performance/ch3.md
 
-
-
-
-在es的规范中，对于promise这样的job，有写到当一个promise被resolve的时候，将其回调enqueue job。可以理解当其resolve在js中执行时是同步的，但是大部分时候，resolve是在implementation中被触发的。比如setTimeout, fire之后再去resolve这个promise，那么从settimeout触发到resolve到enqueue job是一个什么顺序呢？   
-es规范 25.6.1.3.2Promise Resolve Functions 的第12步， perform enqueueJob(...)   
-是不是可以这样理解，setTimeout调用了宿主的接口，传给宿主对应的回调。而timeout是当前宿主的eventloop的task queue之一；当timeout fire的时候，宿主将这个回调放入对应的task queue中；js engine在自己的event loop运行到获取task queue时(实际上，这个操作应该是受宿主控制的；es规范中没有对执行task queue中job的顺序进行规定，而将之留给了实现。所以这里是宿主在设定这些task queue的执行规则。es规范中做了规定的只是: 1. 当一个job开始被js engine执行，它总是执行到结束，即 run to completion；2. 只有在 execution context stack 为空时才会从task queue中取job执行。所以这里的"js engine在自己的event loop运行到获取task queue时"对于js engine来说只要ec stack为空就可以了)，宿主会控制哪个task queue中的job送给js engine去执行。  
-而在浏览器中，实际上是将promise放在一个叫micro task queue的task queue中，当js engine的ec stack为空时，浏览器总是优先将micro task中的job送给它执行；只有当micro task queue空了，浏览器才会去取其它的 task queue 中的job来给js engine去执行。   
-回到上面在 setTimeout 中去 resolve promise 的问题。timeout是一个属于时间的 task queue中的，只有当这个 timeout 的job被执行了，才会执行到 resolve promise，然后将这个 promise 的回调 enqueue 到 micro task queue 中。所以，虽然可以将一个 setTimeout 改造成 promise，但如果这个 timeout 的回调始终没有被js engine执行(js engine 阻塞)，那么这个promise 是不会 resolve 的。   
-如果fetch的实现就像github的polyfill一样，使用 xhr，在其回调中 resolve 这个promise，那么多个 fetch一定是会间隔执行的，即在fetch的回调中resolve的promise会早于下一个fetch的回调执行。   
-(我在一个promise 的回调中 resolve另外一个promise，另一个promise一定会在当前promise的回调执行完后立即执行；所以我可以利用这种办法去模拟fetch，证明fetch不是一个简单的promise。)    
-我需要再去看的，是html里是如何规定fetch的执行的，跟xhr有什么不一样？这才能根本解决原生 fetch 的困惑。   
-
-
-搞清楚这个问题有什么用？   
-如果在fetch的回调重要进行长时间的处理(数据集很大)，我们可能会想将这些操作以异步形式进行处理，比如promise；但如果同时发出了多个fetch，在其中一个的回调执行时，另外一个可能也响应了。那么我在回调中再触发promise来处理数据的时候，会不会后面响应的fetch的回调(因为也是promise)插入到当前回调中新触发的promise前面？搞清楚上面的问题，就知道是不会的。当一个fetch收到响应，进入回调执行过程，一定是对应的网络请求task已经执行，从而触发了对应的promise，开始进入这个网络请求task的微任务执行流程；在这中间新触发的promise都会排在微任务中；而另外一个fetch的响应，即使这时收到了，也在等待js engine执行完微任务后获取宏任务才可能被执行，从而出发其对应的微任务，所以，两个fetch的回调一定会以宏任务进行界限，在其回调中触发的微任务会连贯地执行完。
-
-
-
-
 ### html规范中对于promise的enqueue job的逻辑规定
 ??? script execution context是什么，与 JavaScript execution context stack 的区别？   
 就是后者，只是为了将当前的执行环境传给新创建的 PendingJob   
-
-??? 在 html 的 Queue a microtask,中，7.5步直接就将job 执行了？   
-
-在 xhr 的规范中，也没有提到关于回调处理的 task queue 的东西。 。  
-
-
 
 > An ongoing fetch can be terminated with flag aborted, which is unset unless otherwise specified.
 
@@ -213,3 +180,11 @@ es规范 25.6.1.3.2Promise Resolve Functions 的第12步， perform enqueueJob(.
 ### https://developers.google.com/web/fundamentals/primers/promises
 里面利用promise实现页面顺序加载的demo写得很棒，值得学习
 
+***(catch相当于有一个默认fullfill处理器的then，理解这一点很重要。因为catch总会返回一个新的promise，对于实现Promise来说很重要)??？正确么？***
+
+***todo***: promise.defer ???
+***todo***: promise 与 async 在 错误控制 方面的差异？
+
+***todo***: 还可以在 resolve 中传入一个 promise，看看后面怎么解释规范的规定  
+***todo***: We'll cover later how to be notified of an error in your callback, because even those don't get swallowed.
+todo: 在 promise 的 then 回调中抛异常会是什么影响？
