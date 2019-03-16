@@ -1,6 +1,6 @@
 ---
-title: leetcode-寻找数组的中位数
-date: 2019-01-25 15:38:19
+title: 寻找两个有序数组的中位数-leetcode
+date: 2019-03-17 07:38:19
 tags: leetcode hard
 ---
 ### 题目
