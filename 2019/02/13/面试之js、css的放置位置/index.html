@@ -8,7 +8,7 @@
 </blockquote>
 <h3 id="js和css的放置位置"><a href="#js和css的放置位置" class="headerlink" title="js和css的放置位置"></a>js和css的放置位置</h3><h4 id="为什么要把-css-放在-head里，而js-放在-body-后？js应该放在-后还是前？"><a href="#为什么要把-css-放在-head里，而js-放在-body-后？js应该放在-后还是前？" class="headerlink" title="为什么要把 css 放在 head里，而js 放在 body 后？js应该放在  后还是前？"></a>为什么要把 css 放在 head里，而js 放在 body 后？js应该放在  后还是前？</h4><ol>
 <li>非异步形式的 script，其 <strong><em>加载和执行</em></strong> 都会阻塞 dom解析。即 dom解析会停在 脚本加载处，直到其被加载和执行，才会继续。但是要注意，<strong><em>阻塞 dom 解析，并不是阻塞渲染。浏览器还是会对已经解析的dom进行 样式计算/渲染等操作</em></strong></li>
-<li>放在  前或者后，实质上是阻止了 body 元素的解析完成。在其前放置，则 body 节点尚未关闭；放在其后，则前面 html 的解析已经知道body已完成。</li>
+<li>从规范角度出发，标签之后不应该再有任何内容，因此放在之后通不过html规范的验证；但实际上浏览器都会兼容这种处理，将script同样当作在内来处理。他们对于性能也没有可以观察到的影响。如果说是不是因为一些遗留原因放在之后更好，这个就不是很清楚了，不过感觉意义不大。</li>
 <li>浏览器不是等待所有文档解析完成才展示，而是当一部分文档达到了展示的条件，就将其展示。因此从尽快展示部分文档的角度出发(非可交互，而是度过白屏)，应该让js放在标签之后。</li>
 <li>defer:<ol>
 <li>执行顺序与引用顺序一致</li>
@@ -38,7 +38,21 @@
 </blockquote>
 <blockquote><br>The following sample shows how a script element can be used to include an external module script.<br><script type="module" src="app.mjs"></script><br>This module, and all its dependencies (expressed through JavaScript import statements in the source file), will be fetched. Once the entire resulting module graph has been imported, and the document has finished parsing, the contents of app.mjs will be evaluated.<br>Additionally, if code from another script element in the same Window imports the module from app.mjs (e.g. via import “./app.mjs”;), then the same module script created by the former script element will be imported.<br></blockquote>
 
-<p>从规范对于module类脚本的阐述来看，其默认带有了classic脚本的defer效果。结合前面的分析，defer也是更合理的异步脚本加载方式。跟放在之后相比，defer完全不阻塞dom的解析；跟async相比，它会延迟执行直到dom解析完，并在Domcontentloaded事件前触发。</p>
+<p>从规范对于module类脚本的阐述来看，其默认带有了classic脚本的defer效果。结合前面的分析，defer也是更合理的异步脚本加载方式。跟放在之前相比，defer完全不阻塞dom的解析；跟async相比，它会延迟执行直到dom解析完，并在Domcontentloaded事件前触发。</p>
+<h4 id="css-如果直接写在html里，它的解析执行会影响dom的解析么？如果两步是分别进行的"><a href="#css-如果直接写在html里，它的解析执行会影响dom的解析么？如果两步是分别进行的" class="headerlink" title="css 如果直接写在html里，它的解析执行会影响dom的解析么？如果两步是分别进行的"></a>css 如果直接写在html里，它的解析执行会影响dom的解析么？如果两步是分别进行的</h4><p>写在 html 里的css，对于dom 来说就是一个 script 节点。它的内容应该是由css 解析器单独解析的，因为其规则与 html 解析规则不一样。那么两者分别解析时，什么时候将两者解析的结果合并处理？是不是 dom 上一个节点处理完了，流式地准备将其进行 render 处理，然后就去查看样式规则(css会最终解析成一条条的规则，还是一棵样式树？cssom 是树结构么？如果是树，那么多个没有关联的样式规则如何整理在一棵树上？应该是一棵树，就算开发者没有写根元素的样式，浏览器会给其添加默认样式，也是以样式表的形式提供的。如此就有了根节点，然后就可以将所有规则构建成一棵树)，然后将节点渲染到页面上。所以，当执行render时，如果样式表为空，那么就会将默认样式渲染在页面上。然后等开发者定义的样式表解析完，再将特定样式附加在对应节点上，然后浏览器重新在页面上重新绘制该元素。<br>以这样的方式来讨论的话，css不会影响或阻塞 首评出现内容的时间，但会影响首屏出现内容的样式。如果css解析地慢，那么首屏出现的内容会发生样式闪烁。所以将css以外链的形式放在head里，也不会影响dom的解析，但会影响首屏内容的渲染结果。再结合浏览器中观察的结果，似乎是先解析dom，然后在样式获取到后进行重新绘制，如果样式获取地早，赶上了第一波绘制前，那么就不会出现样式闪烁？</p>
+<p>看来我的以上认识不正确: </p>
+<blockquote>
+<p>默认情况下，CSS 被视为阻塞渲染的资源，这意味着浏览器将不会渲染任何已处理的内容，直至 CSSOM 构建完毕。<br>应该是: css不阻塞 dom 解析，但是阻塞渲染。按照 google 的文档阐述是这样的，在 domcontentloaded 之前不会执行渲染，因为这个事件标志着 dom 和 cssom 的完成，然后才会开始构建 render tree。  </p>
+</blockquote>
+<p>但实际上好像不是这个样子，在 dcl 之前就已经有内容展示在网页中了。<br>很明显的例子是，我在 head 里加载了一个外链css，通过将网速改为慢速，加载此文件需要 5s+，但在加载到它之前网页上就已经有了文档内容。而从 window.performance.timing.domInteractive 获知，这个时间都是与 window.performance.timing.domContentLoaded… 一致的，都在css文件下载之后才触发。所以浏览器并不是css外部链接并不会阻塞浏览器的渲染，但是会阻塞文档的 loaded，以及出现样式闪烁。  </p>
+<p>ref:<br><a href="https://developers.google.com/web/fundamentals/performance/critical-rendering-path/measure-crp" target="_blank" rel="noopener">评估关键渲染路径</a></p>
+<blockquote>
+<p>CSSOM 为何具有树结构？为页面上的任何对象计算最后一组样式时，浏览器都会先从适用于该节点的最通用规则开始（例如，如果该节点是 body 元素的子项，则应用所有 body 样式），然后通过应用更具体的规则（即规则“向下级联”）以递归方式优化计算的样式。</p>
+</blockquote>
+<p>关于渲染树(render tree):</p>
+<blockquote><br>1. DOM 树与 CSSOM 树合并后形成渲染树。<br>2. 渲染树只包含渲染网页所需的节点。<br>3. 布局计算每个对象的精确位置和大小。<br>4. 最后一步是绘制，使用最终渲染树将像素渲染到屏幕上。<br></blockquote>
+
+<p>ref:<br><a href="https://developers.google.com/web/tools/lighthouse/audits/first-contentful-paint" target="_blank" rel="noopener">First Contentful Paint</a></p>
 <h4 id="在浏览器中实验的小技巧"><a href="#在浏览器中实验的小技巧" class="headerlink" title="在浏览器中实验的小技巧"></a>在浏览器中实验的小技巧</h4><p>这类问题，要在浏览器中可视化地看到差异和效果，不太好控制。如果不想采用自己控制server端响应的方法，可以采用 chrome 中对于 cpu throttle 和 Network throttle 来模拟各种情况，可以方便快捷地达到各种测验场景。</p>
 <h3 id="todo"><a href="#todo" class="headerlink" title="todo"></a>todo</h3><ul>
 <li style="list-style: none"><input type="checkbox" checked> 如果将 defer 的script 放在头部，是否会先于文档中的 img 下载，进而在此类文档很多时影响 img 的下载？  </li>
@@ -48,4 +62,4 @@
 <li><a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Quirks_Mode_and_Standards_Mode" target="_blank" rel="noopener">mdn Quirks_Mode_and_Standards_Mode</a></li>
 <li><a href="https://html.spec.whatwg.org/multipage/syntax.html#the-doctype" target="_blank" rel="noopener">html spec the-doctype</a></li>
 </ol>
-</div></article></div></main><footer><div class="paginator"><a href="/blog/2019/02/13/面试之函数的柯里化技巧/" class="next">NEXT</a></div><div class="copyright"><p>© 2019 <a href="https://ginobilee.github.io">mg20</a>, powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/pinggod/hexo-theme-apollo" target="_blank">hexo-theme-apollo</a>.</p></div></footer></div><script async src="//cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML" integrity="sha384-crwIf/BuaWM9rM65iM+dWFldgQ1Un8jWZMuh3puxb8TOY9+linwLoI7ZHZT+aekW" crossorigin="anonymous"></script></body></html>
+</div></article></div></main><footer><div class="paginator"><a href="/blog/2019/03/17/寻找两个有序数组的中位数-leetcode/" class="prev">PREV</a><a href="/blog/2019/02/13/面试之函数的柯里化技巧/" class="next">NEXT</a></div><div class="copyright"><p>© 2019 <a href="https://ginobilee.github.io">mg20</a>, powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/pinggod/hexo-theme-apollo" target="_blank">hexo-theme-apollo</a>.</p></div></footer></div><script async src="//cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML" integrity="sha384-crwIf/BuaWM9rM65iM+dWFldgQ1Un8jWZMuh3puxb8TOY9+linwLoI7ZHZT+aekW" crossorigin="anonymous"></script></body></html>

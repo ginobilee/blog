@@ -1,0 +1,35 @@
+<!DOCTYPE html><html lang="ch"><head><meta name="generator" content="Hexo 3.8.0"><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><title>  · mg20</title><meta name="description" content=" - mg20"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" href="/blog/favicon.png"><link rel="stylesheet" href="/blog/css/apollo.css"><link rel="search" type="application/opensearchdescription+xml" href="https://ginobilee.github.io/atom.xml" title="mg20"></head><body><div class="wrap"><header><a href="/blog/" class="logo-link"><img src="/blog/favicon.png" alt="logo"></a><ul class="nav nav-list"><li class="nav-list-item"><a href="/blog/" target="_self" class="nav-list-link">BLOG</a></li><li class="nav-list-item"><a href="/blog/archives/" target="_self" class="nav-list-link">ARCHIVE</a></li><li class="nav-list-item"><a href="https://github.com/ginobilee" target="_blank" class="nav-list-link">GITHUB</a></li><li class="nav-list-item"><a href="/blog/atom.xml" target="_self" class="nav-list-link">RSS</a></li></ul></header><main class="container"><div class="post"><article class="post-block"><h1 class="post-title"></h1><div class="post-info">Mar 14, 2019</div><div class="post-content"><h3 id="3-datasets"><a href="#3-datasets" class="headerlink" title="3 datasets"></a>3 datasets</h3><p>train set: </p>
+<p>validation set: </p>
+<blockquote>
+<p>We use the validation set to 1) choose the learning algorithm and 2) find the best values of hyperparameters.</p>
+</blockquote>
+<p>test set:    </p>
+<blockquote>
+<p>We use the test set to assess the model before delivering it to the client or putting it in production.</p>
+</blockquote>
+<p>比例:<br>从小数据量时 70/15/15 -&gt; 大数据量时 95/2.5/2.5  (百分比)</p>
+<h3 id="5-4-underfitting-and-overfitting"><a href="#5-4-underfitting-and-overfitting" class="headerlink" title="5.4 underfitting and overfitting"></a>5.4 underfitting and overfitting</h3><blockquote>
+<p>There could be several reasons for underfitting, the most important of which are:<br>• your model is too simple for the data (for example a linear model can often underfit); • the features you engineered are not informative enough.<br>The solution to the problem of underfitting is to try a more complex model or to engineer features with higher predictive power.</p>
+</blockquote>
+<p>Overfitting:  </p>
+<blockquote>
+<p>The model that overfits predicts very well the training data but poorly the data from at least one of the two holdout sets.</p>
+</blockquote>
+<blockquote>
+<p>Several reasons can lead to overfitting, the most important of which are:<br>• your model is too complex for the data (for example a very tall decision tree or a very deep or wide neural network often overfit);<br>• you have too many features but a small number of training examples.</p>
+</blockquote>
+<blockquote>
+<p>Several solutions to the problem of overfitting are possible:</p>
+<ol>
+<li>Try a simpler model (linear instead of polynomial regression, or SVM with a linear kernel instead of RBF, a neural network with fewer layers/units).</li>
+<li>Reduce the dimensionality of examples in the dataset (for example, by using one of the dimensionality reduction techniques discussed in Chapter 9).</li>
+<li>Add more training data, if possible. 4. Regularize the model</li>
+</ol>
+</blockquote>
+<blockquote>
+<p>Regularization is the most widely used approach to prevent overfitting.</p>
+</blockquote>
+<h3 id="5-5-Regularization"><a href="#5-5-Regularization" class="headerlink" title="5.5 Regularization"></a>5.5 Regularization</h3><blockquote>
+<p>if your only goal is to maximize the performance of the model on the holdout data, then L2 usually gives better results.</p>
+</blockquote>
+</div></article></div></main><footer><div class="paginator"></div><div class="copyright"><p>© 2019 <a href="https://ginobilee.github.io">mg20</a>, powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/pinggod/hexo-theme-apollo" target="_blank">hexo-theme-apollo</a>.</p></div></footer></div><script async src="//cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML" integrity="sha384-crwIf/BuaWM9rM65iM+dWFldgQ1Un8jWZMuh3puxb8TOY9+linwLoI7ZHZT+aekW" crossorigin="anonymous"></script></body></html>
